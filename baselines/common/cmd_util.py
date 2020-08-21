@@ -73,12 +73,17 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
         importlib.import_module(module_name)
     if env_type == 'atari':
         env = make_atari(env_id)
-    elif env_type == 'retro':
-        import retro
-        gamestate = gamestate or retro.State.DEFAULT
-        env = retro_wrappers.make_retro(game=env_id, max_episode_steps=10000, use_restricted_actions=retro.Actions.DISCRETE, state=gamestate)
-    else:
-        env = gym.make(env_id, **env_kwargs)
+        #TODO: check for pacman of freeway env and add wrapper accordingly
+        if env_id == 'FreewayNoFrameskip-v4':
+            env = env
+        elif env_id == 'MsPacmanNoFrameskip-v4':
+            env = env
+#    elif env_type == 'retro':
+#        import retro
+#        gamestate = gamestate or retro.State.DEFAULT
+#        env = retro_wrappers.make_retro(game=env_id, max_episode_steps=10000, use_restricted_actions=retro.Actions.DISCRETE, state=gamestate)
+#    else:
+#        env = gym.make(env_id, **env_kwargs)
 
     if flatten_dict_observations and isinstance(env.observation_space, gym.spaces.Dict):
         env = FlattenObservation(env)
@@ -99,8 +104,9 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
     if isinstance(env.action_space, gym.spaces.Box):
         env = ClipActionsWrapper(env)
 
-    if reward_scale != 1:
-        env = retro_wrappers.RewardScaler(env, reward_scale)
+    # We want to allow a wide range of scores to manipulate training
+#    if reward_scale != 1:
+#        env = retro_wrappers.RewardScaler(env, reward_scale)
 
     return env
 
@@ -160,13 +166,16 @@ def common_arg_parser():
     parser.add_argument('--env', help='environment ID', type=str, default='Reacher-v2')
     parser.add_argument('--env_type', help='type of environment, used when the environment type cannot be automatically determined', type=str)
     parser.add_argument('--seed', help='RNG seed', type=int, default=None)
-    parser.add_argument('--alg', help='Algorithm', type=str, default='ppo2')
+    parser.add_argument('--alg', help='Algorithm', type=str, default='deepq')
     parser.add_argument('--num_timesteps', type=float, default=1e6),
     parser.add_argument('--network', help='network type (mlp, cnn, lstm, cnn_lstm, conv_only)', default=None)
     parser.add_argument('--gamestate', help='game state to load (so far only used in retro games)', default=None)
     parser.add_argument('--num_env', help='Number of environment copies being run in parallel. When not specified, set to number of cpus for Atari, and to 1 for Mujoco', default=None, type=int)
     parser.add_argument('--reward_scale', help='Reward scale factor. Default: 1.0', default=1.0, type=float)
     parser.add_argument('--save_path', help='Path to save trained model to', default=None, type=str)
+    #custom load argument
+    parser.add_argument('--load_path', help='Path to load trained model from', default=None, type=str)
+    #Back to business as usual
     parser.add_argument('--save_video_interval', help='Save video every x steps (0 = disabled)', default=0, type=int)
     parser.add_argument('--save_video_length', help='Length of recorded video. Default: 200', default=200, type=int)
     parser.add_argument('--log_path', help='Directory to save learning curve data.', default=None, type=str)

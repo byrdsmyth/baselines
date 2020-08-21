@@ -19,6 +19,9 @@ from baselines.deepq.utils import ObservationInput
 from baselines.common.tf_util import get_session
 from baselines.deepq.models import build_q_func
 
+# DATAVAULT - import so there is access ( can I do all this as a callback? bet I can... )
+from baselines.common.data_storage import DataVault
+
 
 class ActWrapper(object):
     def __init__(self, act, act_params):
@@ -96,7 +99,7 @@ def learn(env,
           network,
           seed=None,
           lr=5e-4,
-          total_timesteps=100000,
+          total_timesteps=1000,
           buffer_size=50000,
           exploration_fraction=0.1,
           exploration_final_eps=0.02,
@@ -184,8 +187,24 @@ def learn(env,
         Wrapper over act function. Adds ability to save it and load it.
         See header of baselines/deepq/categorical.py for details on the act function.
     """
+    
+    # DATAVAULT: Set up list of action meanings and two lists to store episode
+    # and total sums for each possible action in the list.
+    action_names = env.unwrapped.get_action_meanings()
+    print("Have action list: ")
+    print(action_names)
+    action_episode_sums = []
+    action_total_sums = []
+    for x in range(len(action_names)):
+        action_episode_sums.append(0)
+        action_total_sums.append(0)
+    
+    # And obviously, you need a datavault item
+    dv = DataVault()
+    
     # Create all the functions necessary to train the model
 
+    print("Inside custom dqn file")
     sess = get_session()
     set_global_seeds(seed)
 
@@ -195,6 +214,7 @@ def learn(env,
     # by cloudpickle when serializing make_obs_ph
 
     observation_space = env.observation_space
+    print(env.observation_space)
     def make_obs_ph(name):
         return ObservationInput(observation_space, name=name)
 
@@ -256,6 +276,7 @@ def learn(env,
             logger.log('Loaded model from {}'.format(load_path))
 
 
+        #DATAVAULT: This is where you usually want to scrape data - in the timestep loop
         for t in range(total_timesteps):
             if callback is not None:
                 if callback(locals(), globals()):
@@ -275,10 +296,31 @@ def learn(env,
                 kwargs['reset'] = reset
                 kwargs['update_param_noise_threshold'] = update_param_noise_threshold
                 kwargs['update_param_noise_scale'] = True
-            action = act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
-            env_action = action
+            # if environment is pacman, limit moves to four directions
+            name = env.unwrapped.spec.id
+            print("Env is: ")
+            print(name)
+            if name == "MsPacmanNoFrameskip-v4":
+                print("Inside if")
+                while True:
+                    action = act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
+                    env_action = action
+                    # test for break condition
+                    if 1 <= action <= 4:
+                        break
+                print("Took action: " + str(action_names[action]))
+            else:
+                action = act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
+                env_action = action
+                print("Took action: " + str(action_names[action]))
             reset = False
-            new_obs, rew, done, _ = env.step(env_action)
+           
+            new_obs, rew, done, info = env.step(env_action)
+            env.render()
+            # DATAVAULT: after each step, we push the information out to the datavault
+            lives = env.ale.lives()
+            action_episode_sums, action_total_sums = dv.store_data(action, action_names[action], action_episode_sums, action_total_sums, rew, done, info, lives)
+            
             # Store transition in the replay buffer.
             replay_buffer.add(obs, action, rew, new_obs, float(done))
             obs = new_obs
@@ -305,8 +347,10 @@ def learn(env,
             if t > learning_starts and t % target_network_update_freq == 0:
                 # Update target network periodically.
                 update_target()
-
-            mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
+            if (len(episode_rewards[-101:-1]) > 0):
+                mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
+            else:
+                mean_100ep_reward = 0
             num_episodes = len(episode_rewards)
             if done and print_freq is not None and len(episode_rewards) % print_freq == 0:
                 logger.record_tabular("steps", t)
@@ -329,4 +373,7 @@ def learn(env,
                 logger.log("Restored model with mean reward: {}".format(saved_mean_reward))
             load_variables(model_file)
 
+    print("Are we done yet?")
+    dv.make_dataframes()
+    dv.df_to_csv('testInfo')
     return act

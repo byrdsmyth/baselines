@@ -369,14 +369,18 @@ def build_train(make_obs_ph, q_func, num_actions, optimizer, grad_norm_clipping=
     debug: {str: function}
         a bunch of functions to print debug data like q_values.
     """
+    print("Inside build train function in build_graph")
     if param_noise:
+        print("Inside build train function in build_graph and there is param noise")
         act_f = build_act_with_param_noise(make_obs_ph, q_func, num_actions, scope=scope, reuse=reuse,
             param_noise_filter_func=param_noise_filter_func)
     else:
+        print("Inside build train function in build_graph and there is NOT param noise")
         act_f = build_act(make_obs_ph, q_func, num_actions, scope=scope, reuse=reuse)
 
     with tf.variable_scope(scope, reuse=reuse):
         # set up placeholders
+        print("Inside build train function in build_graph and setting up placeholders")
         obs_t_input = make_obs_ph("obs_t")
         act_t_ph = tf.placeholder(tf.int32, [None], name="action")
         rew_t_ph = tf.placeholder(tf.float32, [None], name="reward")
@@ -385,43 +389,55 @@ def build_train(make_obs_ph, q_func, num_actions, optimizer, grad_norm_clipping=
         importance_weights_ph = tf.placeholder(tf.float32, [None], name="weight")
 
         # q network evaluation
+        print("Inside build train function in build_graph and performing q eval")
         q_t = q_func(obs_t_input.get(), num_actions, scope="q_func", reuse=True)  # reuse parameters from act
         q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
 
         # target q network evalution
+        print("Inside build train function in build_graph and performing target q eval")
         q_tp1 = q_func(obs_tp1_input.get(), num_actions, scope="target_q_func")
         target_q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/target_q_func")
 
         # q scores for actions which we know were selected in the given state.
+        print("Inside build train function in build_graph and collecting q scores")
         q_t_selected = tf.reduce_sum(q_t * tf.one_hot(act_t_ph, num_actions), 1)
 
         # compute estimate of best possible value starting from state at t + 1
         if double_q:
+            print("Inside build train function in build_graph and double q is yes")
             q_tp1_using_online_net = q_func(obs_tp1_input.get(), num_actions, scope="q_func", reuse=True)
             q_tp1_best_using_online_net = tf.argmax(q_tp1_using_online_net, 1)
             q_tp1_best = tf.reduce_sum(q_tp1 * tf.one_hot(q_tp1_best_using_online_net, num_actions), 1)
         else:
+            print("Inside build train function in build_graph and double q is no")
             q_tp1_best = tf.reduce_max(q_tp1, 1)
+        print("Inside build train function in build_graph and exited double q check")
         q_tp1_best_masked = (1.0 - done_mask_ph) * q_tp1_best
 
         # compute RHS of bellman equation
+        print("Inside build train function in build_graph and computing RHS of bellman equation")
         q_t_selected_target = rew_t_ph + gamma * q_tp1_best_masked
 
         # compute the error (potentially clipped)
+        print("Inside build train function in build_graph and computing the error")
         td_error = q_t_selected - tf.stop_gradient(q_t_selected_target)
         errors = U.huber_loss(td_error)
         weighted_error = tf.reduce_mean(importance_weights_ph * errors)
 
         # compute optimization op (potentially with gradient clipping)
+        print("Inside build train function in build_graph and compute optimization op")
         if grad_norm_clipping is not None:
+            print("Inside build train function in build_graph and grad norm clipping is yes")
             gradients = optimizer.compute_gradients(weighted_error, var_list=q_func_vars)
             for i, (grad, var) in enumerate(gradients):
                 if grad is not None:
                     gradients[i] = (tf.clip_by_norm(grad, grad_norm_clipping), var)
             optimize_expr = optimizer.apply_gradients(gradients)
         else:
+            print("Inside build train function in build_graph and grad norm clipping is no")
             optimize_expr = optimizer.minimize(weighted_error, var_list=q_func_vars)
 
+        print("Inside build train function in build_graph and exited grad norm clipping check")
         # update_target_fn will be called periodically to copy Q network to target Q network
         update_target_expr = []
         for var, var_target in zip(sorted(q_func_vars, key=lambda v: v.name),
@@ -445,5 +461,6 @@ def build_train(make_obs_ph, q_func, num_actions, optimizer, grad_norm_clipping=
         update_target = U.function([], [], updates=[update_target_expr])
 
         q_values = U.function([obs_t_input], q_t)
-
+    
+        print("Inside build train function in build_graph and about to return")
         return act_f, train, update_target, {'q_values': q_values}

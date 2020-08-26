@@ -10,12 +10,17 @@ import numpy as np
 
 from baselines.common.vec_env import VecFrameStack, VecNormalize, VecEnv
 from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
-from baselines.common.cmd_util import common_arg_parser, parse_unknown_args, make_vec_env, make_env
+from baselines.common.cmd_util import common_arg_parser, parse_unknown_args, make_vec_env, make_env, highlights_arg_parser
 from baselines.common.tf_util import get_session
 from baselines.common.data_storage import DataVault
 from baselines import logger
 from importlib import import_module
 from deepq import super_simple_dqn_wrapper
+from datetime import datetime
+import os
+import logging
+import coloredlogs
+from datavault_callback import data_callback
 
 try:
     from mpi4py import MPI
@@ -34,7 +39,6 @@ except ImportError:
 
 _game_envs = defaultdict(set)
 for env in gym.envs.registry.all():
-    # TODO: solve this with regexes
     env_type = env.entry_point.split(':')[0].split('.')[-1]
     _game_envs[env_type].add(env.id)
 
@@ -52,10 +56,13 @@ _game_envs['retro'] = {
     'SpaceInvaders-Snes',
 }
 
-
 def train(args, extra_args):
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
+        
     env_type, env_id = get_env_type(args)
-    print('env_type: {}'.format(env_type))
+    logger.info('env_type: {}'.format(env_type))
 
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
@@ -64,7 +71,7 @@ def train(args, extra_args):
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
     alg_kwargs.update(extra_args)
 
-    env = build_env(args)
+    env = build_highlights_env(args)
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.get_dir(), "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
 
@@ -74,20 +81,28 @@ def train(args, extra_args):
         if alg_kwargs.get('network') is None:
             alg_kwargs['network'] = get_default_network(env_type)
 
-    print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
+    logger.info('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
     model = learn(
         env=env,
         seed=seed,
         total_timesteps=total_timesteps,
         load_path=args.load_path,
+        save_path=args.save_path,
         **alg_kwargs
     )
+    
+    print("Returned act: ")
+    print(model)
 
     return model, env
 
 
 def build_env(args):
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
+    
     ncpu = multiprocessing.cpu_count()
     if sys.platform == 'darwin': ncpu //= 2
     nenv = args.num_env or ncpu
@@ -135,6 +150,10 @@ def build_env(args):
 
 
 def get_env_type(args):
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
+    
     env_id = args.env
 
     if args.env_type is not None:
@@ -207,65 +226,150 @@ def parse_cmdline_kwargs(args):
 
     return {k: parse(v) for k,v in parse_unknown_args(args).items()}
 
-
 def configure_logger(log_path, **kwargs):
     if log_path is not None:
         logger.configure(log_path)
     else:
         logger.configure(**kwargs)
 
+# BRITT ADDITION
+def build_highlights_env(args):
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
+    
+    ncpu = multiprocessing.cpu_count()
+    if sys.platform == 'darwin': ncpu //= 2
+    nenv = args.num_env or ncpu
+    alg = args.alg
+    seed = args.seed
+
+    env_type = 'atari'
+    env_id = args.env
+    # Default alg is dqn, so make initial normal dqn environment
+    env = make_env(env_id, env_type, seed=seed, wrapper_kwargs={'frame_stack': True})
+    
+    logger.info("About to check for training wrapper")
+    # Now switch on the training-based args to add wrappers ass needed
+    if args.training_wrapper == 'pacman_fear_only':
+        env = super_simple_dqn_wrapper.fear_only_wrapper(env)
+        logger.info("Training wrapper: " + str(args.training_wrapper))
+    if args.training_wrapper == 'pacman_power_pill_only':
+        env = super_simple_dqn_wrapper.pacman_power_pill_only(env)
+        logger.info("Training wrapper: " + str(args.training_wrapper))
+    if args.training_wrapper == 'pacman_normal_pill_only':
+        env = super_simple_dqn_wrapper.pacman_normal_pill_only_wrapper(env)
+    if args.training_wrapper == 'pacman_normal_pill_power_pill_only':
+        env = super_simple_dqn_wrapper.pacman_normal_pill_power_pill_only_wrapper(env)
+    if args.training_wrapper == 'pacman_normal_pill_fear_only':
+        env = super_simple_dqn_wrapper.pacman_normal_pill_fear_only_wrapper(env)
+    if args.training_wrapper == 'pacman_normal_pill_in_game':
+        env = super_simple_dqn_wrapper.pacman_normal_pill_in_game_wrapper(env)
+    if args.training_wrapper == 'pacman_power_pill_fear_only':
+        env = super_simple_dqn_wrapper.pacman_power_pill_fear_only_wrapper(env)
+    if args.training_wrapper == 'pacman_power_pill_in_game':
+        env = super_simple_dqn_wrapper.pacman_power_pill_in_game_wrapper(env)
+    if args.training_wrapper == 'pacman_fear_in_game':
+        env = super_simple_dqn_wrapper.pacman_fear_in_game_wrapper(env)
+    # training options for freeway (also specifies the environment)
+    if args.training_wrapper == 'freeway_up_only':
+        env = super_simple_dqn_wrapper.freeway_up_only_wrapper(env)
+    if args.training_wrapper == 'freeway_down_only':
+        env = super_simple_dqn_wrapper.freeway_down_only_wrapper(env)
+    if args.training_wrapper == 'freeway_up_down':
+        env = super_simple_dqn_wrapper.freeway_up_down_wrapper(env)
+    # training options for asterix (also specifies the environment)
+    if args.training_wrapper == 'asterix_fear_only':
+        env = super_simple_dqn_wrapper.fear_only_wrapper(env)
+    if args.training_wrapper == 'asterix_bonus_life_in_game':
+        env = super_simple_dqn_wrapper.asterix_bonus_life_in_game_wrapper(env)
+    if args.training_wrapper == 'asterix_fear_in_game':
+        env = super_simple_dqn_wrapper.asterix_fear_in_game_wrapper(env)
+    # training options for alien (also specifies the environment)
+    if args.training_wrapper == 'alien_fear_only':
+        env = super_simple_dqn_wrapper.fear_only_wrapper(env)
+    if args.training_wrapper == 'alien_pulsar_only':
+        env = super_simple_dqn_wrapper.alien_pulsar_only_wrapper(env)
+    if args.training_wrapper == 'alien_eggs_only':
+        env = super_simple_dqn_wrapper.alien_eggs_only_wrapper(env)
+    if args.training_wrapper == 'alien_eggs_pulsar_only':
+        env = super_simple_dqn_wrapper.alien_eggs_pulsar_only_wrapper(env)
+    if args.training_wrapper == 'alien_eggs_fear_only':
+        env = super_simple_dqn_wrapper.alien_eggs_fear_only_wrapper(env)
+    if args.training_wrapper == 'alien_eggs_in_game':
+        env = super_simple_dqn_wrapper.alien_eggs_in_game_wrapper(env)
+    if args.training_wrapper == 'alien_pulsar_fear_only':
+        env = super_simple_dqn_wrapper.alien_pulsar_fear_only_wrapper(env)
+    if args.training_wrapper == 'alien_pulsar_in_game':
+        env = super_simple_dqn_wrapper.alien_pulsar_in_game_wrapper(env)
+    if args.training_wrapper == 'alien_fear_in_game':
+        env = super_simple_dqn_wrapper.alien_fear_in_game_wrapper(env)
+    return env
+
+
 
 def main(args):
     # configure logger, disable logging in child MPI processes (with rank > 0)
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
 
-    arg_parser = common_arg_parser()
+    # Use parser for specifying agent reward structure
+    arg_parser = highlights_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(args)
     extra_args = parse_cmdline_kwargs(unknown_args)
 
     if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
         rank = 0
-        configure_logger(args.log_path)
+#        configure_logger(args.log_path)
     else:
         rank = MPI.COMM_WORLD.Get_rank()
         configure_logger(args.log_path, format_strs=[])
 
-    model, env = train(args, extra_args)
+
+    # Set up saving to a single, logical location on folder above the code base to avoid
+    # Swelling the size of the code base with test outputs
+    # get current date and time for default data output folder name
+    if args.save_path is None:
+        # datetime object containing current date and time
+        now = datetime.now()
+        logger.info("now =" + str(now))
+
+        # month_day_YY_H_M_S
+        dt_string = now.strftime("%b%d_%Y_%H_%M_")
+        dt_string = dt_string + str(args.training_wrapper)
+        logger.info("date and time =" + str(dt_string))
+        args.save_path = dt_string
+        # get current directory
+        path = os.getcwd()
+        # use parent dir to save data, so we can keep the current folder small and portable
+        directory = os.path.abspath(os.path.join(path, os.pardir))
+        directory = os.path.abspath(os.path.join(directory, os.pardir))
+        directory = os.path.join(directory, 'train_agent_data')
+        directory = os.path.join(directory, args.save_path)
+        os.mkdir(directory)
+        directory2 = os.path.join(directory, args.save_path)
+        args.save_path = directory2
+        logger.info("Now save path is: ")
+        logger.info(args.save_path)
+        args.log_path = os.path.join(directory, 'logs')
+        os.mkdir(args.log_path)
+        logger.info("Now log path is: ")
+        logger.info(args.log_path)
 
     if args.save_path is not None and rank == 0:
-        print("Inside custom run file and about to save model")
+        logger.info("Inside custom run file and about to save model")
         save_path = osp.expanduser(args.save_path)
-        print("Model is: ")
-        print(model)
-        model.save(save_path)
-#        print("Let's try messing around with other save formats")
-#        models.save_model(model, filepath='./models/testingAlgo')
-
-    if args.play:
-        logger.log("Running trained model")
-        obs = env.reset()
-
-        state = model.initial_state if hasattr(model, 'initial_state') else None
-        dones = np.zeros((1,))
-
-        episode_rew = np.zeros(env.num_envs) if isinstance(env, VecEnv) else np.zeros(1)
-        while True:
-            if state is not None:
-                actions, _, state, _ = model.step(obs,S=state, M=dones)
-                print("state not none")
-            else:
-                actions, _, _, _ = model.step(obs)
-                print("In the else")
-
-            obs, rew, done, _ = env.step(actions)
-            episode_rew += rew
-            env.render()
-            done_any = done.any() if isinstance(done, np.ndarray) else done
-            # TODO: Add dataVault scoop in here
-            if done_any:
-                for i in np.nonzero(done)[0]:
-                    print('episode_rew={}'.format(episode_rew[i]))
-                    episode_rew[i] = 0
-
+        args.log_path = os.path.join(directory, 'logs')
+        
+        
+    model, env = train(args, extra_args)
+    
+    
+    # Now save Model
+    logger.info("Model is: ")
+    logger.info(model)
+    model.save(save_path)
     env.close()
 
     return model

@@ -19,6 +19,7 @@ from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common import retro_wrappers
 from baselines.common.wrappers import ClipActionsWrapper
 
+
 def make_vec_env(env_id, env_type, num_env, seed,
                  wrapper_kwargs=None,
                  env_kwargs=None,
@@ -213,3 +214,30 @@ def parse_unknown_args(args):
             preceded_by_key = False
 
     return retval
+
+# BRITT ADDITIONS
+
+def highlights_arg_parser():
+    """
+    Create an argparse.ArgumentParser for training algorithms with specific rewards structures for evaluation with Highlights.
+    """
+    parser = arg_parser()
+    parser.add_argument('--env', help='environment ID', type=str, default='Reacher-v2')
+    parser.add_argument('--env_type', help='type of environment, used when the environment type cannot be automatically determined', type=str)
+    parser.add_argument('--seed', help='RNG seed', type=int, default=None)
+    parser.add_argument('--alg', help='Algorithm', type=str, default='deepq')
+    parser.add_argument('--num_timesteps', type=float, default=1e6),
+    parser.add_argument('--network', help='network type (mlp, cnn, lstm, cnn_lstm, conv_only)', default=None)
+    parser.add_argument('--gamestate', help='game state to load (so far only used in retro games)', default=None)
+    parser.add_argument('--num_env', help='Number of environment copies being run in parallel. When not specified, set to number of cpus for Atari, and to 1 for Mujoco', default=None, type=int)
+    parser.add_argument('--reward_scale', help='Reward scale factor. Default: 1.0', default=1.0, type=float)
+    parser.add_argument('--save_path', help='Path to save trained model to', default=None, type=str)
+    #custom load argument
+    parser.add_argument('--load_path', help='Path to load trained model from', default=None, type=str)
+    #Back to business as usual
+    parser.add_argument('--save_video_interval', help='Save video every x steps (0 = disabled)', default=0, type=int)
+    parser.add_argument('--save_video_length', help='Length of recorded video. Default: 200', default=200, type=int)
+    parser.add_argument('--log_path', help='Directory to save learning curve data.', default=None, type=str)
+    # training options for pacman
+    parser.add_argument('--training_wrapper', help='--pacman_fear_only,--pacman_power_pill_only,--pacman_in_game_only,--pacman_normal_pill_only,--pacman_normal_pill_power_pill_only,--pacman_normal_pill_fear_only,--pacman_normal_pill_in_game,--pacman_power_pill_fear_only,--pacman_power_pill_in_game,--pacman_fear_in_game,--freeway_up_only,--freeway_down_only,--freeway_up_down,--freeway_in_game,--asterix_fear_only,--asterix_bonus_life_in_game,--asterix_in_game,--asterix_fear_in_game,--alien_in_game,--alien_fear_only,--alien_pulsar_only,--alien_eggs_only,--alien_eggs_pulsar_only,--alien_eggs_fear_only,--alien_eggs_in_game,--alien_pulsar_fear_only,--alien_pulsar_in_game,--alien_fear_in_game', default=None, type=str)
+    return parser

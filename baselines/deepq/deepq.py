@@ -19,8 +19,10 @@ from baselines.deepq.utils import ObservationInput
 from baselines.common.tf_util import get_session
 from baselines.deepq.models import build_q_func
 
-# DATAVAULT - import so there is access ( can I do all this as a callback? bet I can... )
+# DATAVAULT - import so there is access
 from baselines.common.data_storage import DataVault
+import logging
+import coloredlogs
 
 
 class ActWrapper(object):
@@ -119,6 +121,7 @@ def learn(env,
           param_noise=False,
           callback=None,
           load_path=None,
+          save_path=None,
           **network_kwargs
             ):
     """Train a deepq model.
@@ -188,11 +191,15 @@ def learn(env,
         See header of baselines/deepq/categorical.py for details on the act function.
     """
     
+    logger = logging.getLogger()
+    coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(filename)s[%(process)d] %(levelname)s %(message)s')
+    logger.setLevel(logging.DEBUG)
+    
     # DATAVAULT: Set up list of action meanings and two lists to store episode
     # and total sums for each possible action in the list.
     action_names = env.unwrapped.get_action_meanings()
-    print("Have action list: ")
-    print(action_names)
+    logger.info("Have action list: ")
+    logger.info(action_names)
     action_episode_sums = []
     action_total_sums = []
     for x in range(len(action_names)):
@@ -204,7 +211,7 @@ def learn(env,
     
     # Create all the functions necessary to train the model
 
-    print("Inside custom dqn file")
+    logger.info("Inside custom dqn file")
     sess = get_session()
     set_global_seeds(seed)
 
@@ -214,7 +221,7 @@ def learn(env,
     # by cloudpickle when serializing make_obs_ph
 
     observation_space = env.observation_space
-    print(env.observation_space)
+    logger.info(env.observation_space)
     def make_obs_ph(name):
         return ObservationInput(observation_space, name=name)
 
@@ -298,28 +305,36 @@ def learn(env,
                 kwargs['update_param_noise_scale'] = True
             # if environment is pacman, limit moves to four directions
             name = env.unwrapped.spec.id
-            print("Env is: ")
-            print(name)
+            logger.info("Env is: ")
+            logger.info(name)
             if name == "MsPacmanNoFrameskip-v4":
-                print("Inside if")
+                logger.info("Inside if")
                 while True:
-                    action = act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
+                    step_return = act(np.array(obs)[None], update_eps=update_eps, **kwargs)
+                    action = step_return[0][0]
                     env_action = action
                     # test for break condition
                     if 1 <= action <= 4:
                         break
-                print("Took action: " + str(action_names[action]))
+                logger.info("Took action: " + str(action_names[action]))
             else:
-                action = act(np.array(obs)[None], update_eps=update_eps, **kwargs)[0]
+                step_return = act(np.array(obs)[None], update_eps=update_eps, **kwargs)
+                action = step_return[0][0]
+                print(action)
+                q_values = np.squeeze(step_return[1])
+                print(q_values)
+                print("Obs: ")
+                print(np.array(obs)[None])
                 env_action = action
-                print("Took action: " + str(action_names[action]))
+                logger.info("Took action: " + str(action_names[action]))
             reset = False
            
             new_obs, rew, done, info = env.step(env_action)
             env.render()
             # DATAVAULT: after each step, we push the information out to the datavault
             lives = env.ale.lives()
-            action_episode_sums, action_total_sums = dv.store_data(action, action_names[action], action_episode_sums, action_total_sums, rew, done, info, lives)
+            #store_data(self, action, action_name, action_episode_sums, action_total_sums, reward, done, info, lives, q_values, observation, mean_reward):
+            action_episode_sums, action_total_sums = dv.store_data(action, action_names[action], action_episode_sums, action_total_sums, rew, done, info, lives, q_values, new_obs, saved_mean_reward)
             
             # Store transition in the replay buffer.
             replay_buffer.add(obs, action, rew, new_obs, float(done))
@@ -373,7 +388,13 @@ def learn(env,
                 logger.log("Restored model with mean reward: {}".format(saved_mean_reward))
             load_variables(model_file)
 
-    print("Are we done yet?")
+    logger.info("Are we done yet?")
     dv.make_dataframes()
-    dv.df_to_csv('testInfo')
+    print("Save path is: ")
+    print(save_path)
+    # use parent dir to save data, so we can keep the current folder small and portable
+    directory = os.path.abspath(os.path.join(save_path, os.pardir))
+    csv_path = os.path.join(directory , 'CSVs')
+    os.mkdir(csv_path)
+    dv.df_to_csv(csv_path)
     return act

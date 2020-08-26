@@ -13,12 +13,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import keras
-#from argmax_analyzer import Argmax
-#import overlay_stream
-#from gym_minigrid.wrappers import *
-#import gym s_maze
 import pandas as pd
-import tensorwatch as tw
 import sys
 import scipy
 import seaborn as sns
@@ -26,20 +21,22 @@ from matplotlib.colors import ListedColormap
 from collections import OrderedDict
 import os
 # from varname import nameof
-
-import chainer
-import h5py
+import coloredlogs, logging
 
 class DataVault:
     #dictionaries for storing all the info which will be shoved into dataframes later
     main_data_dict = OrderedDict()
     per_episode_action_distribution_dict = {}
     df_list = []
+    args = []
     
     #keep track of steps
-    step = 1
+    step = 4
 
-    #def __init__(self):
+    def __init__(self):
+        logger = logging.getLogger()
+        coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s')
+        logger.setLevel(logging.DEBUG)
         
     def print_df(self, stats_df):
         print("DF: ")
@@ -52,36 +49,25 @@ class DataVault:
             filename = "df" + str(counter) + ".csv"
             filepath = os.path.join(stream_directory, filename)
             df.to_csv(filepath, index=True)
-            print("Output to csv")
             counter = counter + 1
         
-    def stack_counts_of_actions_per_episode(self, episode, action_episode_sums):
-        episode_sums = { episode: {
-            'action 0 episode sum': action_episode_sums[0],
-            'action 1 episode sum': action_episode_sums[1],
-            'action 2 episode sum': action_episode_sums[2],
-#            'action 3 episode sum': action_episode_sums[3],
-#            'action 4 episode sum': action_episode_sums[4],
-#            'action 5 episode sum': action_episode_sums[4],
-#            'action 6 episode sum': action_episode_sums[6],
-#            'action 7 episode sum': action_episode_sums[7],
-#            'action 8 episode sum': action_episode_sums[8],
-                }
-            }
-        self.per_episode_action_distribution_dict.update(episode_sums)
-        print(self.per_episode_action_distribution_dict)
-        
-    def store_data(self, action, action_name, action_episode_sums, action_total_sums, reward, done, info, lives):
+    def store_data(self, action, action_name, action_episode_sums, action_total_sums, reward, done, info, lives, q_values, observation, mean_reward):
+        logger = logging.getLogger()
+        coloredlogs.install(level='DEBUG', fmt='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s')
+        logger.setLevel(logging.DEBUG)
         #need to find some other way to store: Observations, argmax, features, q value
         
         end_of_episode = False
         end_of_epoch = False
-        
-#        print("Lives: " + str(lives))
         # If dataframe is not empty...
         if len(self.main_data_dict) != 0:
+            #check contents of dictionary
+#            logger.info("About to logger.info dictionary...")
+#            for keys,values in self.main_data_dict.items():
+#                logger.info(keys)
+#                logger.info(values)
             lastElem = list(self.main_data_dict.keys())[-1]
-#            print("Last element is: " + str(lastElem))
+#            logger.info("Last element is: " + str(lastElem))
             
             last_lives_left = self.main_data_dict[lastElem]['lives']
             episode = self.main_data_dict[lastElem]['episode']
@@ -95,11 +81,9 @@ class DataVault:
             episode_step = self.main_data_dict[lastElem]['episode step'] + 1
             epoch_step = self.main_data_dict[lastElem]['epoch step'] + 1
         else:
-#            print("Should be setting up dict for the first time")
-            last_lives_left = lives
+            last_lives_left = 3
             episode = epoch = episode_step = epoch_step = self.step
             episode_reward = epoch_reward = total_reward = reward
-#        print("Episode is; " + str(episode))
             
             
         eoe_flag = False
@@ -107,7 +91,7 @@ class DataVault:
         if (lives != last_lives_left):
             eoe_flag = True
             # Add to other dictionary, for stacked bar chart, as currently set
-#            print("Added to stacked chart dictionary")
+#            logger.info("Added to stacked chart dictionary")
             self.stack_counts_of_actions_per_episode(episode, action_episode_sums)
             episode_reward = reward
             episode = episode + 1
@@ -122,7 +106,7 @@ class DataVault:
                 epoch = epoch + 1
                 end_of_epoch = True
                 epoch_step = 1
-#                print("end of episode and epoch is true ")
+#                logger.info("end of episode and epoch is true ")
                 eoe_flag = True
         
         # Up correct action sum
@@ -131,10 +115,9 @@ class DataVault:
         
         temp_action_total_sum = action_total_sums[action]
         action_total_sums[action] = temp_action_total_sum + 1
-#        print("end of episode and epoch is: ")
-#        print(end_of_episode)
-#        print(end_of_epoch)
-
+#        logger.info("end of episode and epoch is: ")
+#        logger.info(end_of_episode)
+#        logger.info(end_of_epoch)
         step_stats = { self.step: {
             'action_name': action_name,
             'action': action,
@@ -150,25 +133,78 @@ class DataVault:
             'episode step': episode_step,
             'epoch': epoch,
             'epoch step': epoch_step,
-            'step': self.step}
+            'state': self.step,
+            'q_values': np.squeeze(q_values),
+            'observation': np.squeeze(observation),
+            'mean reward': mean_reward
             }
+        }
+            
             
         # add carefully the action sums to the dictionary
         for action_number in range(len(action_episode_sums)):
-#            print("Action in list: ")
-#            print(action_number)
+#            logger.info("Action in list: ")
+#            logger.info(action_number)
             index_name = "action " + str(action_number) + " episode sum"
             step_stats[self.step][index_name] = action_episode_sums[action_number]
             index_name = "action " + str(action_number) + " total sum"
             step_stats[self.step][index_name] = action_total_sums[action_number]
-        
-#        print("Adding to main dict")
+            
+#            logger.info("About to logger.info dictionary after steps update...")
+#            for keys,values in self.main_data_dict.items():
+#                logger.info(keys)
+#                logger.info(values)
+            
+                
+    #    logger.info(step_stats)
+        #add to the dictionary
         self.main_data_dict.update(step_stats)
+#        logger.info("Updated main dictionary: ")
+#        logger.info(self.main_data_dict)
         
         return (action_episode_sums, action_total_sums)
 
     def make_dataframes(self):
+        np.set_printoptions(threshold=sys.maxsize)
         main_df = pd.DataFrame.from_dict(self.main_data_dict, orient='index')
         stacked_bar_df = pd.DataFrame.from_dict(self.per_episode_action_distribution_dict, orient='index')
         self.df_list.append(main_df)
         self.df_list.append(stacked_bar_df)
+        
+#        q_values_df = main_df[['state','q_values']].copy()
+##        q_values_df.step.name = 'state'
+#        print("Have made the following q_value df: ")
+#        self.print_df(q_values_df)
+#        self.df_list.append(q_values_df)
+#        
+#        features_df = main_df[['state','features']].copy()
+##        features_df.step.name = 'state'
+#        print("Have made the following features df: ")
+#        self.print_df(features_df)
+#        self.df_list.append(features_df)
+#        
+##        raw_screen_features_df = main_df[['state','raw_screen_data']].copy()
+##        #rename the raw_screen_data to features
+##        raw_screen_features_df.rename(columns = {'raw_screen_data':'features'}, inplace = True)
+###        raw_screen_features_df.step.name = 'state'
+#        raw_screen_features_df = read_input_files(args.stream_folder + '/state')
+#        print("Have made the following features df: ")
+#        self.print_df(raw_screen_features_df)
+#        self.df_list.append(raw_screen_features_df)
+        
+#        state_features_importance_df = self.get_state_importance(q_values_df, raw_screen_features_df)
+#        state_features_importance_df.index.name = 'state'
+#        self.df_list.append(state_features_importance_df)
+
+    def get_state_importance(self, q_values_df, features_df):
+        states_q_values_df = compute_states_importance(q_values_df, compare_to='second')
+        state_features_importance_df = pd.merge(states_q_values_df, features_df, on='state')
+        # make sure the index is the state
+#        state_features_importance_df.index.name = 'state'
+        
+        # Using the features=='input' from video_generation.py
+        state_features_importance_df = state_features_importance_df[['state','q_values', 'importance', 'features']]
+        
+        print("state_features_importance_df")
+        self.print_df(state_features_importance_df)
+        return state_features_importance_df

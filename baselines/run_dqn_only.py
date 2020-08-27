@@ -62,7 +62,7 @@ def train(args, extra_args):
     logger.setLevel(logging.DEBUG)
         
     env_type, env_id = get_env_type(args)
-    logger.info('env_type: {}'.format(env_type))
+    #logger.info('env_type: {}'.format(env_type))
 
     total_timesteps = int(args.num_timesteps)
     seed = args.seed
@@ -81,7 +81,7 @@ def train(args, extra_args):
         if alg_kwargs.get('network') is None:
             alg_kwargs['network'] = get_default_network(env_type)
 
-    logger.info('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
+    #logger.info('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
     model = learn(
         env=env,
@@ -92,8 +92,8 @@ def train(args, extra_args):
         **alg_kwargs
     )
     
-    print("Returned act: ")
-    print(model)
+    #print("Returned act: ")
+    #print(model)
 
     return model, env
 
@@ -248,14 +248,14 @@ def build_highlights_env(args):
     # Default alg is dqn, so make initial normal dqn environment
     env = make_env(env_id, env_type, seed=seed, wrapper_kwargs={'frame_stack': True})
     
-    logger.info("About to check for training wrapper")
+    #logger.info("About to check for training wrapper")
     # Now switch on the training-based args to add wrappers ass needed
     if args.training_wrapper == 'pacman_fear_only':
         env = super_simple_dqn_wrapper.fear_only(env)
-        logger.info("Training wrapper: " + str(args.training_wrapper))
+        #logger.info("Training wrapper: " + str(args.training_wrapper))
     if args.training_wrapper == 'pacman_power_pill_only':
         env = super_simple_dqn_wrapper.pacman_power_pill_only(env)
-        logger.info("Training wrapper: " + str(args.training_wrapper))
+        #logger.info("Training wrapper: " + str(args.training_wrapper))
     if args.training_wrapper == 'pacman_normal_pill_only':
         env = super_simple_dqn_wrapper.pacman_normal_pill_only(env)
     if args.training_wrapper == 'pacman_normal_pill_power_pill_only':
@@ -332,12 +332,12 @@ def main(args):
     if args.save_path is None:
         # datetime object containing current date and time
         now = datetime.now()
-        logger.info("now =" + str(now))
+        #logger.info("now =" + str(now))
 
         # month_day_YY_H_M_S
         dt_string = now.strftime("%b%d_%Y_%H_%M_")
         dt_string = dt_string + str(args.training_wrapper)
-        logger.info("date and time =" + str(dt_string))
+        #logger.info("date and time =" + str(dt_string))
         args.save_path = dt_string
         # get current directory
         path = os.getcwd()
@@ -349,15 +349,15 @@ def main(args):
         os.mkdir(directory)
         directory2 = os.path.join(directory, args.save_path)
         args.save_path = directory2
-        logger.info("Now save path is: ")
-        logger.info(args.save_path)
+        #logger.info("Now save path is: ")
+        #logger.info(args.save_path)
         args.log_path = os.path.join(directory, 'logs')
         os.mkdir(args.log_path)
-        logger.info("Now log path is: ")
-        logger.info(args.log_path)
+        #logger.info("Now log path is: ")
+        #logger.info(args.log_path)
 
     if args.save_path is not None and rank == 0:
-        logger.info("Inside custom run file and about to save model")
+        #logger.info("Inside custom run file and about to save model")
         save_path = osp.expanduser(args.save_path)
         args.log_path = os.path.join(directory, 'logs')
         
@@ -366,8 +366,8 @@ def main(args):
     
     
     # Now save Model
-    logger.info("Model is: ")
-    logger.info(model)
+    #logger.info("Model is: ")
+    #logger.info(model)
     model.save(save_path)
     env.close()
 

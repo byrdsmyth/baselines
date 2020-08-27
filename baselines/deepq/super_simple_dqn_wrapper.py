@@ -209,8 +209,6 @@ class pacman_normal_pill_only(gym.Wrapper):
     # if got pts for something out, no pts
     def reward(self, reward):
         if reward == 10:
-            print("Reward received: ")
-            print(reward)
             reward = 1
         elif reward == 0:
             reward = -1
@@ -246,8 +244,6 @@ class pacman_normal_pill_power_pill_only(gym.Wrapper):
     # if pts for something else, no pts
     def reward(self, reward):
         if reward == 10:
-            print("Reward received: ")
-            print(reward)
             reward = 1
         else:
             if reward  == 0:
@@ -645,8 +641,6 @@ class alien_eggs_only(gym.Wrapper):
     
     def reward(self, reward):
         if reward == 10:
-            print("Reward received: ")
-            print(reward)
             reward = 1
         elif reward == 0:
             reward = -1
@@ -674,8 +668,6 @@ class alien_eggs_pulsar_only(gym.Wrapper):
     
     def reward(self, reward):
         if reward == 10:
-            print("Reward received: ")
-            print(reward)
             reward = 1
         else:
             if reward  == 0:
@@ -718,8 +710,6 @@ class alien_eggs_fear_only(gym.Wrapper):
             done = True
             reward = - 100
         if reward == 10:
-            print("Reward received: ")
-            print(reward)
             reward = 10
         else:
             # if you didn't die, you lived, so hurray you get positive reinforcement
@@ -748,8 +738,6 @@ class alien_eggs_in_game(gym.Wrapper):
     
     def reward(self, reward):
         if reward == 10:
-            print("Reward received: ")
-            print(reward)
             reward = 100
         elif reward == 0:
             reward = -1

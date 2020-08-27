@@ -198,8 +198,6 @@ def learn(env,
     # DATAVAULT: Set up list of action meanings and two lists to store episode
     # and total sums for each possible action in the list.
     action_names = env.unwrapped.get_action_meanings()
-    logger.info("Have action list: ")
-    logger.info(action_names)
     action_episode_sums = []
     action_total_sums = []
     for x in range(len(action_names)):
@@ -210,8 +208,6 @@ def learn(env,
     dv = DataVault()
     
     # Create all the functions necessary to train the model
-
-    logger.info("Inside custom dqn file")
     sess = get_session()
     set_global_seeds(seed)
 
@@ -221,7 +217,6 @@ def learn(env,
     # by cloudpickle when serializing make_obs_ph
 
     observation_space = env.observation_space
-    logger.info(env.observation_space)
     def make_obs_ph(name):
         return ObservationInput(observation_space, name=name)
 
@@ -305,10 +300,7 @@ def learn(env,
                 kwargs['update_param_noise_scale'] = True
             # if environment is pacman, limit moves to four directions
             name = env.unwrapped.spec.id
-            logger.info("Env is: ")
-            logger.info(name)
             if name == "MsPacmanNoFrameskip-v4":
-                logger.info("Inside if")
                 while True:
                     step_return = act(np.array(obs)[None], update_eps=update_eps, **kwargs)
                     action = step_return[0][0]
@@ -317,32 +309,17 @@ def learn(env,
                     q_values = np.squeeze(step_return[1])
                     # test for break condition
                     if 1 <= action <= 4:
-                        print("Taking action: " + str(action))
                         break
-                logger.info("Took action: " + str(action_names[action]))
             else:
                 step_return = act(np.array(obs)[None], update_eps=update_eps, **kwargs)
                 action = step_return[0][0]
-                print(action)
                 q_values = np.squeeze(step_return[1])
-                print(q_values)
-                print("Obs: ")
-                print(np.array(obs)[None])
                 env_action = action
-                logger.info("Took action: " + str(action_names[action]))
             reset = False
            
            
             
             new_obs, rew, done, info = env.step(env_action)
-#            new_obs, rew = env.step(env_action)
-            print("New_obs: ")
-            print(new_obs)
-            print("rew")
-            print(rew)
-            print("info:")
-            print(info)
-            env.render()
             # DATAVAULT: after each step, we push the information out to the datavault
             lives = env.ale.lives()
             #store_data(self, action, action_name, action_episode_sums, action_total_sums, reward, done, info, lives, q_values, observation, mean_reward):
@@ -400,7 +377,6 @@ def learn(env,
                 logger.log("Restored model with mean reward: {}".format(saved_mean_reward))
             load_variables(model_file)
 
-    logger.info("Are we done yet?")
     dv.make_dataframes()
     print("Save path is: ")
     print(save_path)

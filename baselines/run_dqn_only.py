@@ -251,58 +251,58 @@ def build_highlights_env(args):
     logger.info("About to check for training wrapper")
     # Now switch on the training-based args to add wrappers ass needed
     if args.training_wrapper == 'pacman_fear_only':
-        env = super_simple_dqn_wrapper.fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.fear_only(env)
         logger.info("Training wrapper: " + str(args.training_wrapper))
     if args.training_wrapper == 'pacman_power_pill_only':
         env = super_simple_dqn_wrapper.pacman_power_pill_only(env)
         logger.info("Training wrapper: " + str(args.training_wrapper))
     if args.training_wrapper == 'pacman_normal_pill_only':
-        env = super_simple_dqn_wrapper.pacman_normal_pill_only_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_normal_pill_only(env)
     if args.training_wrapper == 'pacman_normal_pill_power_pill_only':
-        env = super_simple_dqn_wrapper.pacman_normal_pill_power_pill_only_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_normal_pill_power_pill_only(env)
     if args.training_wrapper == 'pacman_normal_pill_fear_only':
-        env = super_simple_dqn_wrapper.pacman_normal_pill_fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_normal_pill_fear_only(env)
     if args.training_wrapper == 'pacman_normal_pill_in_game':
-        env = super_simple_dqn_wrapper.pacman_normal_pill_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_normal_pill_in_game(env)
     if args.training_wrapper == 'pacman_power_pill_fear_only':
-        env = super_simple_dqn_wrapper.pacman_power_pill_fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_power_pill_fear_only(env)
     if args.training_wrapper == 'pacman_power_pill_in_game':
-        env = super_simple_dqn_wrapper.pacman_power_pill_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_power_pill_in_game(env)
     if args.training_wrapper == 'pacman_fear_in_game':
-        env = super_simple_dqn_wrapper.pacman_fear_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.pacman_fear_in_game(env)
     # training options for freeway (also specifies the environment)
     if args.training_wrapper == 'freeway_up_only':
-        env = super_simple_dqn_wrapper.freeway_up_only_wrapper(env)
+        env = super_simple_dqn_wrapper.freeway_up_only(env)
     if args.training_wrapper == 'freeway_down_only':
-        env = super_simple_dqn_wrapper.freeway_down_only_wrapper(env)
+        env = super_simple_dqn_wrapper.freeway_down_only(env)
     if args.training_wrapper == 'freeway_up_down':
-        env = super_simple_dqn_wrapper.freeway_up_down_wrapper(env)
+        env = super_simple_dqn_wrapper.freeway_up_down(env)
     # training options for asterix (also specifies the environment)
     if args.training_wrapper == 'asterix_fear_only':
-        env = super_simple_dqn_wrapper.fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.fear_only(env)
     if args.training_wrapper == 'asterix_bonus_life_in_game':
-        env = super_simple_dqn_wrapper.asterix_bonus_life_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.asterix_bonus_life_in_game(env)
     if args.training_wrapper == 'asterix_fear_in_game':
-        env = super_simple_dqn_wrapper.asterix_fear_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.asterix_fear_in_game(env)
     # training options for alien (also specifies the environment)
     if args.training_wrapper == 'alien_fear_only':
-        env = super_simple_dqn_wrapper.fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.fear_only(env)
     if args.training_wrapper == 'alien_pulsar_only':
-        env = super_simple_dqn_wrapper.alien_pulsar_only_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_pulsar_only(env)
     if args.training_wrapper == 'alien_eggs_only':
-        env = super_simple_dqn_wrapper.alien_eggs_only_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_eggs_only(env)
     if args.training_wrapper == 'alien_eggs_pulsar_only':
-        env = super_simple_dqn_wrapper.alien_eggs_pulsar_only_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_eggs_pulsar_only(env)
     if args.training_wrapper == 'alien_eggs_fear_only':
-        env = super_simple_dqn_wrapper.alien_eggs_fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_eggs_fear_only(env)
     if args.training_wrapper == 'alien_eggs_in_game':
-        env = super_simple_dqn_wrapper.alien_eggs_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_eggs_in_game(env)
     if args.training_wrapper == 'alien_pulsar_fear_only':
-        env = super_simple_dqn_wrapper.alien_pulsar_fear_only_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_pulsar_fear_only(env)
     if args.training_wrapper == 'alien_pulsar_in_game':
-        env = super_simple_dqn_wrapper.alien_pulsar_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_pulsar_in_game(env)
     if args.training_wrapper == 'alien_fear_in_game':
-        env = super_simple_dqn_wrapper.alien_fear_in_game_wrapper(env)
+        env = super_simple_dqn_wrapper.alien_fear_in_game(env)
     return env
 
 

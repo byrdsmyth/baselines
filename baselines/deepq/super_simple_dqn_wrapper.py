@@ -138,7 +138,7 @@ class FreewayUpRewarded(gym.Wrapper):
 #   training methods for use in evaluation by Highlights
 #  algorithm for Britt's Thesis
     
-class fear_only_wrapper(gym.Wrapper):
+class fear_only(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -178,7 +178,7 @@ class fear_only_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
         
-class pacman_power_pill_only_wrapper(gym.Wrapper):
+class pacman_power_pill_only(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -195,7 +195,7 @@ class pacman_power_pill_only_wrapper(gym.Wrapper):
             reward = 0
         return reward
     
-class pacman_normal_pill_only_wrapper(gym.Wrapper):
+class pacman_normal_pill_only(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -232,7 +232,7 @@ class pacman_normal_pill_only_wrapper(gym.Wrapper):
         return obs
 
 
-class pacman_normal_pill_power_pill_only_wrapper(gym.Wrapper):
+class pacman_normal_pill_power_pill_only(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -272,7 +272,7 @@ class pacman_normal_pill_power_pill_only_wrapper(gym.Wrapper):
         return obs
 
 
-class pacman_normal_pill_fear_only_wrapper(gym.Wrapper):
+class pacman_normal_pill_fear_only(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -304,7 +304,7 @@ class pacman_normal_pill_fear_only_wrapper(gym.Wrapper):
                 # if you didn't die, you lived, so hurray you get positive reinforcement
                 reward = 1
             self.lives = lives
-            return obs, reward, done, info
+        return obs, reward, done, info
     
     def reset(self, **kwargs):
         """Reset only when lives are exhausted.
@@ -319,7 +319,7 @@ class pacman_normal_pill_fear_only_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
         
-class pacman_normal_pill_in_game_wrapper(gym.Wrapper):
+class pacman_normal_pill_in_game(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -358,7 +358,7 @@ class pacman_normal_pill_in_game_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
     
-class pacman_power_pill_fear_only_wrapper(gym.Wrapper):
+class pacman_power_pill_fear_only(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -404,7 +404,7 @@ class pacman_power_pill_fear_only_wrapper(gym.Wrapper):
             return obs
     
     
-class pacman_power_pill_in_game_wrapper(gym.Wrapper):
+class pacman_power_pill_in_game(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -440,7 +440,7 @@ class pacman_power_pill_in_game_wrapper(gym.Wrapper):
                 self.lives = self.env.unwrapped.ale.lives()
             return obs
     
-class pacman_fear_in_game_wrapper(gym.Wrapper):
+class pacman_fear_in_game(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
         Done by DeepMind for the DQN and co. since it helps value estimation.
@@ -478,7 +478,7 @@ class pacman_fear_in_game_wrapper(gym.Wrapper):
         return obs
     
 
-class freeway_up_only_wrapper(gym.Wrapper):
+class freeway_up_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -492,7 +492,7 @@ class freeway_up_only_wrapper(gym.Wrapper):
         return obs, reward, done, info
 
 
-class freeway_down_only_wrapper(gym.Wrapper):
+class freeway_down_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -505,7 +505,7 @@ class freeway_down_only_wrapper(gym.Wrapper):
             reward = -1
         return obs, reward, done, info
 
-class freeway_up_down_wrapper(gym.Wrapper):
+class freeway_up_down(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -521,7 +521,7 @@ class freeway_up_down_wrapper(gym.Wrapper):
         return obs, reward, done, info
 
 # Can we get access to total reward here?
-class asterix_bonus_life_in_game_wrapper(gym.Wrapper):
+class asterix_bonus_life_in_game(gym.Wrapper):
     
     total_reward = 0
     
@@ -562,7 +562,7 @@ class asterix_bonus_life_in_game_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-class asterix_fear_in_game_wrapper(gym.Wrapper):
+class asterix_fear_in_game(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -600,7 +600,7 @@ class asterix_fear_in_game_wrapper(gym.Wrapper):
         return obs
 
 # Stopping edits here, will focus on training freeway and pacman for now
-class alien_pulsar_only_wrapper(gym.Wrapper):
+class alien_pulsar_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -638,7 +638,7 @@ class alien_pulsar_only_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-class alien_eggs_only_wrapper(gym.Wrapper):
+class alien_eggs_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -667,7 +667,7 @@ class alien_eggs_only_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-class alien_eggs_pulsar_only_wrapper(gym.Wrapper):
+class alien_eggs_pulsar_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -700,7 +700,7 @@ class alien_eggs_pulsar_only_wrapper(gym.Wrapper):
         return obs
 
 
-class alien_eggs_fear_only_wrapper(gym.Wrapper):
+class alien_eggs_fear_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -741,7 +741,7 @@ class alien_eggs_fear_only_wrapper(gym.Wrapper):
         return obs
         
 
-class alien_eggs_in_game_wrapper(gym.Wrapper):
+class alien_eggs_in_game(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -769,7 +769,7 @@ class alien_eggs_in_game_wrapper(gym.Wrapper):
         return obs
 
 
-class alien_pulsar_fear_only_wrapper(gym.Wrapper):
+class alien_pulsar_fear_only(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -808,7 +808,7 @@ class alien_pulsar_fear_only_wrapper(gym.Wrapper):
         return obs
 
 
-class alien_pulsar_in_game_wrapper(gym.Wrapper):
+class alien_pulsar_in_game(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env
@@ -837,7 +837,7 @@ class alien_pulsar_in_game_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-class alien_fear_in_game_wrapper(gym.Wrapper):
+class alien_fear_in_game(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
         self.env = env

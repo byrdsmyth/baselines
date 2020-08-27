@@ -312,10 +312,12 @@ def learn(env,
                 while True:
                     step_return = act(np.array(obs)[None], update_eps=update_eps, **kwargs)
                     action = step_return[0][0]
+                    
                     env_action = action
                     q_values = np.squeeze(step_return[1])
                     # test for break condition
                     if 1 <= action <= 4:
+                        print("Taking action: " + str(action))
                         break
                 logger.info("Took action: " + str(action_names[action]))
             else:
@@ -330,7 +332,16 @@ def learn(env,
                 logger.info("Took action: " + str(action_names[action]))
             reset = False
            
+           
+            
             new_obs, rew, done, info = env.step(env_action)
+#            new_obs, rew = env.step(env_action)
+            print("New_obs: ")
+            print(new_obs)
+            print("rew")
+            print(rew)
+            print("info:")
+            print(info)
             env.render()
             # DATAVAULT: after each step, we push the information out to the datavault
             lives = env.ale.lives()

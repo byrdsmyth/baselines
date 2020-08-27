@@ -90,7 +90,11 @@ class FearDeathWrapper(gym.Wrapper):
             # so it's important to keep lives > 0, so that we only reset once
             # the environment advertises done.
             done = True
-            reward = -10
+            reward = -1
+        else:
+            # since we have a seperate condition for fear with normal rewards,
+            # set all other to 0 rewards
+            reward = 0
         self.lives = lives
         return obs, reward, done, info
             
@@ -136,8 +140,12 @@ class FreewayUpRewarded(gym.Wrapper):
     
 class fear_only_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -150,7 +158,7 @@ class fear_only_wrapper(gym.Wrapper):
             # so it's important to keep lives > 0, so that we only reset once
             # the environment advertises done.
             done = True
-            reward = - 100
+            reward = - 10
         else:
             # if you didn't die, you lived, so hurray you get positive reinforcement
             reward = 1
@@ -172,23 +180,33 @@ class fear_only_wrapper(gym.Wrapper):
         
 class pacman_power_pill_only_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
-    # normalize so the smallest reward is one, reduces magnitudes
     # set anything besides power pill to 0 rewards
     def reward(self, reward):
         if reward < 50:
             reward = 0
         if reward > 99:
             reward = 0
-        return reward/10
+        return reward
     
 class pacman_normal_pill_only_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
+    # Test if getting 10 pts for eating normal pill
+    # if so, keep pts, if no pill, negative points
+    # if got pts for something out, no pts
     def reward(self, reward):
         if reward == 10:
             print("Reward received: ")
@@ -213,11 +231,19 @@ class pacman_normal_pill_only_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
 
+
 class pacman_normal_pill_power_pill_only_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
+    # Only keep points for eating pills
+    # if no pills, negative reward (retreading old ground)
+    # if pts for something else, no pts
     def reward(self, reward):
         if reward == 10:
             print("Reward received: ")
@@ -248,8 +274,12 @@ class pacman_normal_pill_power_pill_only_wrapper(gym.Wrapper):
 
 class pacman_normal_pill_fear_only_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -257,15 +287,19 @@ class pacman_normal_pill_fear_only_wrapper(gym.Wrapper):
         # check current lives, make loss of life terminal,
         # then update lives to handle bonus lives
         lives = self.env.unwrapped.ale.lives()
+        # If a ghost just ate you, negative reward
         if lives < self.lives and lives > 0:
-            # for Qbert sometimes we stay in lives == 0 condition for a few frames
-            # so it's important to keep lives > 0, so that we only reset once
+            # it's important to keep lives > 0, so that we only reset once
             # the environment advertises done.
             done = True
-            reward = -100
+            reward = -10
             # we want to encourage clearing the board so basic pills get a points boost
             if reward == 10:
                 reward = 2
+            # not eating a pill means retreading old ground
+            # negative reinforcement
+            elif reward == 0:
+                reward = -1
             else:
                 # if you didn't die, you lived, so hurray you get positive reinforcement
                 reward = 1
@@ -287,8 +321,12 @@ class pacman_normal_pill_fear_only_wrapper(gym.Wrapper):
         
 class pacman_normal_pill_in_game_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -296,10 +334,14 @@ class pacman_normal_pill_in_game_wrapper(gym.Wrapper):
         # check current lives, make loss of life terminal,
         # then update lives to handle bonus lives
         lives = self.env.unwrapped.ale.lives()
+        # Since all other normal game rewards still apply,
+        # set eating a normal pill to the highest reward possible
         if reward == 10:
             reward = 100
+        # give negative reward for not eating a pill
         elif reward == 0:
             reward = -1
+        # leave all other rewards as-is
         self.lives = lives
         return obs, reward, done, info
         
@@ -318,8 +360,12 @@ class pacman_normal_pill_in_game_wrapper(gym.Wrapper):
     
 class pacman_power_pill_fear_only_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
     
     def step(self, action):
@@ -329,11 +375,13 @@ class pacman_power_pill_fear_only_wrapper(gym.Wrapper):
         # then update lives to handle bonus lives
         lives = self.env.unwrapped.ale.lives()
         if lives < self.lives and lives > 0:
-            # for Qbert sometimes we stay in lives == 0 condition for a few frames
-            # so it's important to keep lives > 0, so that we only reset once
+            # it's important to keep lives > 0, so that we only reset once
             # the environment advertises done.
             done = True
             reward = -100
+        # set death by ghost to exact opposite of only other point source
+        # which is eating a poser pill, 100 pts
+        # All else gets 0 points
         else:
             if reward < 50:
                 reward = 0
@@ -358,8 +406,12 @@ class pacman_power_pill_fear_only_wrapper(gym.Wrapper):
     
 class pacman_power_pill_in_game_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -367,6 +419,8 @@ class pacman_power_pill_in_game_wrapper(gym.Wrapper):
         # check current lives, make loss of life terminal,
         # then update lives to handle bonus lives
         lives = self.env.unwrapped.ale.lives()
+        # Set eating a power pill to really high amount
+        # leave all other rewards the same
         if reward > 50:
             if reward < 99:
                 reward = 1000
@@ -388,8 +442,12 @@ class pacman_power_pill_in_game_wrapper(gym.Wrapper):
     
 class pacman_fear_in_game_wrapper(gym.Wrapper):
     def __init__(self, env):
-        super().__init__(env)
-        self.env = env
+        """Make end-of-life == end-of-episode, but only reset on true game over.
+        Done by DeepMind for the DQN and co. since it helps value estimation.
+        """
+        gym.Wrapper.__init__(self, env)
+        self.lives = 0
+        self.was_real_done  = True
     
     
     def step(self, action):
@@ -428,6 +486,7 @@ class freeway_up_only_wrapper(gym.Wrapper):
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.was_real_done = done
+        # If action 1, means went up
         if action == 1:
             reward = 1
         self.lives = lives
@@ -442,7 +501,7 @@ class freeway_down_only_wrapper(gym.Wrapper):
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.was_real_done = done
-        
+        # If action 2, means went down
         if action == 2:
             reward = -1
         self.lives = lives
@@ -456,6 +515,7 @@ class freeway_up_down_wrapper(gym.Wrapper):
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.was_real_done = done
+        # combine both positive and negative rewards
         if action == 1:
             reward = 1
         elif action == 2:
@@ -474,6 +534,7 @@ class asterix_bonus_life_in_game_wrapper(gym.Wrapper):
     
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
+        # add to total reward
         self.total_reward = self.total_reward + reward
         #bonus life at 10,000, 30,000, 50,000, 80,000, 110,000 points,
         # and every 40,000 points thereafter.
@@ -521,9 +582,10 @@ class asterix_fear_in_game_wrapper(gym.Wrapper):
             # the environment advertises done.
             done = True
             reward = reward - 100
-        else:
+        elif reward == 0:
             # if you didn't die, you lived, so hurray you get positive reinforcement
             reward = reward + 1
+        # leave all other rewards in place 
         self.lives = lives
         return obs, reward, done, info
         
@@ -540,7 +602,7 @@ class asterix_fear_in_game_wrapper(gym.Wrapper):
             self.lives = self.env.unwrapped.ale.lives()
         return obs
 
-
+# Stopping edits here, will focus on training freeway and pacman for now
 class alien_pulsar_only_wrapper(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)

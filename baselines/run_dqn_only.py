@@ -123,8 +123,7 @@ def build_env(args):
 
     else:
         # TODO: Ensure willuse GPU when sent to SLURM (Add as a command-line argument)
-        config = tf.ConfigProto(device_count = {'GPU': 0},
-                               allow_soft_placement=True,
+        config = tf.ConfigProto(allow_soft_placement=True,
                                intra_op_parallelism_threads=1,
                                inter_op_parallelism_threads=1)
         config.gpu_options.allow_growth = True

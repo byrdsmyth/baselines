@@ -489,7 +489,6 @@ class freeway_up_only_wrapper(gym.Wrapper):
         # If action 1, means went up
         if action == 1:
             reward = 1
-        self.lives = lives
         return obs, reward, done, info
 
 
@@ -504,7 +503,6 @@ class freeway_down_only_wrapper(gym.Wrapper):
         # If action 2, means went down
         if action == 2:
             reward = -1
-        self.lives = lives
         return obs, reward, done, info
 
 class freeway_up_down_wrapper(gym.Wrapper):
@@ -520,7 +518,6 @@ class freeway_up_down_wrapper(gym.Wrapper):
             reward = 1
         elif action == 2:
             reward = -1
-        self.lives = lives
         return obs, reward, done, info
 
 # Can we get access to total reward here?

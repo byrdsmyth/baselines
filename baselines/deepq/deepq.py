@@ -313,6 +313,7 @@ def learn(env,
                     step_return = act(np.array(obs)[None], update_eps=update_eps, **kwargs)
                     action = step_return[0][0]
                     env_action = action
+                    q_values = np.squeeze(step_return[1])
                     # test for break condition
                     if 1 <= action <= 4:
                         break

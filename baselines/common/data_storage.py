@@ -92,7 +92,6 @@ class DataVault:
             eoe_flag = True
             # Add to other dictionary, for stacked bar chart, as currently set
 #            logger.info("Added to stacked chart dictionary")
-            self.stack_counts_of_actions_per_episode(episode, action_episode_sums)
             episode_reward = reward
             episode = episode + 1
             episode_step = 1

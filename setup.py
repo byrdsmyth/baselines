@@ -15,9 +15,6 @@ extras = {
         'atari-py',
         'matplotlib',
         'pandas'
-    ],
-    'mpi': [
-        'mpi4py'
     ]
 }
 
@@ -35,16 +32,16 @@ setup(name='baselines',
           'scipy',
           'tqdm',
           'joblib',
-          'cloudpickle',
+          'cloudpickle==1.2.0',
           'click',
           'opencv-python'
       ],
       extras_require=extras,
-      description='OpenAI baselines: high quality implementations of reinforcement learning algorithms',
+      description='OpenAI Highlights baselines: custom implementations of reinforcement learning algorithms',
       author='OpenAI',
-      url='https://github.com/openai/baselines',
-      author_email='gym@openai.com',
-      version='0.1.6')
+      url='https://github.com/byrdsmyth/baselines',
+      author_email='brittany.f.davis@wsu.edu',
+      version='0.0.1')
 
 
 # ensure there is some tensorflow build with version above 1.4

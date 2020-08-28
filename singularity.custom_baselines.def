@@ -22,7 +22,6 @@ From: python:3.8-slim-buster
     # get the repo
     mkdir highlights_training
     cd highlights_training
-    git clone https://github.com/byrdsmyth/baselines.git
     
 %setup
 

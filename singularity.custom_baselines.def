@@ -1,6 +1,7 @@
 Bootstrap: docker
 #From: <registry>/<namespace>/<container>:<tag>@<digest>
-From: nvidia/cuda:10.2-base-ubi8
+# From: nvidia/cuda:10.2-base-ubi8
+From: tensorflow/tensorflow:latest-gpu
 
 %post
     # Downloads the latest package lists (important).

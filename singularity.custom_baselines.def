@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.6-slim-buster
+From: python:3.6.12-slim
 
 %post
     # Downloads the latest package lists (important).
@@ -17,8 +17,8 @@ From: python:3.6-slim-buster
     # which are useless now.
     rm -rf /var/lib/apt/lists/*
     # Install Pipenv.
-    pip3 install pyenv
     pip3 install pipenv
+    pip3 install pyenv
     
 %setup
 

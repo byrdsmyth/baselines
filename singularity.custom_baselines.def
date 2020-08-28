@@ -1,6 +1,6 @@
 BootStrap: docker
 # From: nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
-From: python:3.8-slim-buster
+From: python:3.6-slim-buster
 
 %post
     # Downloads the latest package lists (important).
@@ -10,7 +10,7 @@ From: python:3.8-slim-buster
     # python3-tk is required by matplotlib.
     # python3-dev is needed to install some packages.
     apt-get update && apt-get install -y --no-install-recommends --fix-missing software-properties-common \
-        python3 \
+        python3.6 \
         python3-tk \
         python3-pip \
         python3-dev
@@ -18,10 +18,8 @@ From: python:3.8-slim-buster
     # which are useless now.
     rm -rf /var/lib/apt/lists/*
     # Install Pipenv.
+    pip3 install pyenv
     pip3 install pipenv
-    # get the repo
-    mkdir highlights_training
-    cd highlights_training
     
 %setup
 

@@ -20,7 +20,6 @@ from datetime import datetime
 import os
 import logging
 import coloredlogs
-from datavault_callback import data_callback
 
 try:
     from mpi4py import MPI
@@ -335,8 +334,8 @@ def main(args):
         #logger.info("now =" + str(now))
 
         # month_day_YY_H_M_S
-        dt_string = now.strftime("%b%d_%Y_%H_%M_")
-        dt_string = dt_string + str(args.training_wrapper)
+        dt_temp_string = now.strftime("%b%d_%Y_%H_%M_%S")
+        dt_string = str(args.training_wrapper) + dt_temp_string
         #logger.info("date and time =" + str(dt_string))
         args.save_path = dt_string
         # get current directory
@@ -346,13 +345,15 @@ def main(args):
         directory = os.path.abspath(os.path.join(directory, os.pardir))
         directory = os.path.join(directory, 'train_agent_data')
         directory = os.path.join(directory, args.save_path)
-        os.mkdir(directory)
+        if os.path.exists(directory) is False:
+            os.mkdir(directory)
         directory2 = os.path.join(directory, args.save_path)
         args.save_path = directory2
         #logger.info("Now save path is: ")
         #logger.info(args.save_path)
         args.log_path = os.path.join(directory, 'logs')
-        os.mkdir(args.log_path)
+        if os.path.exists(args.log_path) is False:
+            os.mkdir(args.log_path)
         #logger.info("Now log path is: ")
         #logger.info(args.log_path)
 

@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.6.12-slim
+From: python:3.6-slim-buster
 
 %post
     # Downloads the latest package lists (important).
@@ -8,17 +8,16 @@ From: python:3.6.12-slim
     # cause the build process to hang.
     # python3-tk is required by matplotlib.
     # python3-dev is needed to install some packages.
-    apt-get update && apt-get install -y --no-install-recommends --fix-missing software-properties-common \
+    apt-get update && apt-get install -y --no-install-recommends \
         python3.6 \
-        python3-tk \
-        python3-pip \
-        python3-dev
+        python3.6-tk \
+        python3.6-pip \
+        python3.6-dev
     # Reduce the size of the image by deleting the package lists we downloaded,
     # which are useless now.
     rm -rf /var/lib/apt/lists/*
     # Install Pipenv.
     pip3 install pipenv
-    pip3 install pyenv
     
 %setup
 
